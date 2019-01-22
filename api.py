@@ -16,17 +16,15 @@ class DataValidationError(ValueError):
     pass
 
 
-######################################################################
-# ERROR Handling
-######################################################################
-
-
 app = Flask(__name__)
 
 client = MongoClient('mongodb://marwan:Mm1234567@ds163164.mlab.com:63164/mongotask')
 db = client.mongotask
 
 
+######################################################################
+# ERROR Handling
+######################################################################
 
 def generate_random_slug():
        x = ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(16))
@@ -39,6 +37,8 @@ def get_shortlink(db,slug):
 def add_shortlink(db,shortlink):
     db.links.insert_one(shortlink)
 
+
+    
 
 @app.errorhandler(DataValidationError)
 def request_validation_error(e):
@@ -73,6 +73,7 @@ def internal_error(e):
 @app.route('/shortlinks', methods=['GET','POST'])
 def get_add_handler():
     if request.method == 'GET':
+        
         response =[]
         for link in db.links.find():
              response.append({'slug':link['slug'],'ios':link['ios'],'android':link['android'] , 'web':link['web']})
@@ -113,8 +114,46 @@ def get_add_handler():
 
 @app.route('/shortlinks/<slug>' , methods=['PUT'])
 def update_handler(slug):
-    print(slug)
-    return "update request"
+
+    if not request.is_json:
+            raise DataValidationError('Case Non-JSON Content-Type')
+
+    if not get_shortlink(db,slug):
+            abort(400)       
+    
+    data = request.get_json()
+    response={'slug':slug}
+    if 'ios' in data: 
+        ios = {} 
+        if 'primary' in data['ios']:
+            ios['primary'] = data['ios']['primary']
+        if 'fallback' in data['ios']:
+            ios['fallback'] = data['ios']['fallback']
+        if not len(ios) == 0:
+         response['ios']= ios       
+         db.links.update_one({'slug':slug},{"$set": { 'ios': ios} })
+
+    if 'android' in data:
+        android = {} 
+        if 'primary' in data['android']:
+            android['primary'] = data['android']['primary']
+        if 'fallback' in data['android']:
+            android['fallback'] = data['android']['fallback']
+        if not len(android) == 0: 
+         response['android']= android
+         db.links.update_one({'slug':slug},{"$set": { 'android': android} })     
+        
+    if 'web' in data:
+        web = data['web']
+
+        if not len(web) == 0: 
+         response['web']= web
+         db.links.update_one({'slug':slug},{"$set": { 'web': web} })    
+
+    return jsonify(response)            
+       
+     
+   
 
 if __name__ == '__main__':
     
