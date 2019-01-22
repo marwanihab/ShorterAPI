@@ -153,6 +153,10 @@ def update_handler(slug):
     return jsonify(response)            
        
      
+ #TODO 
+ # schema validation
+ # authentication  
+ # Tests
    
 
 if __name__ == '__main__':
