@@ -11,6 +11,7 @@ import schemas
 from jsonschema.exceptions import ValidationError 
 from user import User
 from flask_httpauth import HTTPBasicAuth
+
 ######################################################################
 # Custom Exceptions
 ######################################################################
@@ -26,15 +27,20 @@ db = client.mongotask
 auth = HTTPBasicAuth()
 
 @auth.verify_password
-def verify_password(username, password):
-    
-    user = db.users.find_one({'username':username}) #username case sensitive
-    if user :
+def verify_password(username_or_token, password):
+    user_id = User.verify_auth_token(username_or_token)
+    if user_id:
+     user = db.users.find_one({'username':user_id})
      user_object = User(user['username'],user['password'])
-     #print(user['username'],user['password'])
-     if not user_object.verify_password(password):   
-      return False 
-    else: return False  
+     
+    else:    
+     user = db.users.find_one({'username':username_or_token}) #username case sensitive
+     if user :
+      user_object = User(user['username'],user['password'])
+      #print(user['username'],user['password'])
+      if not user_object.verify_password(password):   
+       return False 
+     else: return False  
     
     g.user = user_object
     return True
@@ -93,6 +99,15 @@ def internal_error(e):
  response = {}
  schemas.validate_server_error_schema(response)
  return make_response(jsonify(response), status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@app.route('/token')
+@auth.login_required
+def get_auth_token():
+    token = g.user.generate_auth_token()
+    return jsonify({'token': token.decode('ascii')})
+
+
 
 
 @app.route('/users', methods = ['POST'])
@@ -159,6 +174,7 @@ def get_add_handler():
 
 
 @app.route('/shortlinks/<slug>' , methods=['PUT'])
+@auth.login_required
 def update_handler(slug):
 
     if not request.is_json:
