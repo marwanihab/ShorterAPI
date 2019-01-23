@@ -16,6 +16,9 @@ A simple API used to get or add shortlinks into a database.
     3)mlab online database. 
 5]Run the api.py using Python command. 
 
+## Technologies
+MongoDB, Flask , Python 3.5.0
+
     
 
 
