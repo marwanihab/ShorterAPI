@@ -5,6 +5,8 @@ from itsdangerous import(TimedJSONWebSignatureSerializer as Serializer, BadSigna
 
 secret_key = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(32))
 
+class DataValidationError(ValueError):
+    pass
 
 class User:
 
@@ -29,7 +31,7 @@ class User:
     	s = Serializer(secret_key, expires_in = expiration)
     	return s.dumps({'id': self.name })     
 
-    @staticmethod
+    @staticmethod #user is not known untill decoding the token
     def verify_auth_token(token):
     	s = Serializer(secret_key)
     	try:

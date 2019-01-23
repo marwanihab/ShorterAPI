@@ -6,25 +6,33 @@ from datetime import datetime
 from pymongo import MongoClient
 from flask import make_response
 import random, string
-from flask_api import status # HTTP Status Codes
+from flask_api import status 
 import schemas
 from jsonschema.exceptions import ValidationError 
-from user import User
+from models import User ,  DataValidationError
 from flask_httpauth import HTTPBasicAuth
-
-######################################################################
-# Custom Exceptions
-######################################################################
-class DataValidationError(ValueError):
-    pass
 
 
 app = Flask(__name__)
+def generate_random_slug():
+       x = ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(16))
+       return x
+
+
+auth = HTTPBasicAuth()
 
 client = MongoClient('mongodb://marwan:Mm1234567@ds163164.mlab.com:63164/mongotask')
 db = client.mongotask
+def get_shortlink(db,slug):
+    return db.links.find_one({"slug":slug})
 
-auth = HTTPBasicAuth()
+def add_shortlink(db,shortlink):
+    db.links.insert_one(shortlink)
+
+
+######################################################################
+# Authentication
+######################################################################
 
 @auth.verify_password
 def verify_password(username_or_token, password):
@@ -44,22 +52,11 @@ def verify_password(username_or_token, password):
     
     g.user = user_object
     return True
+    
 
 ######################################################################
 # ERROR Handling
 ######################################################################
-
-def generate_random_slug():
-       x = ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(16))
-       return x
-
-
-def get_shortlink(db,slug):
-    return db.links.find_one({"slug":slug})
-
-def add_shortlink(db,shortlink):
-    db.links.insert_one(shortlink)
-
 
 @app.errorhandler(ValidationError)
 def request_schema_error(e):
@@ -101,12 +98,15 @@ def internal_error(e):
  return make_response(jsonify(response), status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+######################################################################
+# Rounting
+######################################################################
+
 @app.route('/token')
 @auth.login_required
 def get_auth_token():
     token = g.user.generate_auth_token()
     return jsonify({'token': token.decode('ascii')})
-
 
 
 
