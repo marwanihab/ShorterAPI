@@ -9,8 +9,8 @@ import random, string
 from flask_api import status # HTTP Status Codes
 import schemas
 from jsonschema.exceptions import ValidationError 
-
-
+from user import User
+from flask_httpauth import HTTPBasicAuth
 ######################################################################
 # Custom Exceptions
 ######################################################################
@@ -23,6 +23,21 @@ app = Flask(__name__)
 client = MongoClient('mongodb://marwan:Mm1234567@ds163164.mlab.com:63164/mongotask')
 db = client.mongotask
 
+auth = HTTPBasicAuth()
+
+@auth.verify_password
+def verify_password(username, password):
+    
+    user = db.users.find_one({'username':username}) #username case sensitive
+    if user :
+     user_object = User(user['username'],user['password'])
+     #print(user['username'],user['password'])
+     if not user_object.verify_password(password):   
+      return False 
+    else: return False  
+    
+    g.user = user_object
+    return True
 
 ######################################################################
 # ERROR Handling
@@ -78,9 +93,25 @@ def internal_error(e):
  response = {}
  schemas.validate_server_error_schema(response)
  return make_response(jsonify(response), status.HTTP_500_INTERNAL_SERVER_ERROR)
- 
+
+
+@app.route('/users', methods = ['POST'])
+def new_user():
+    username = request.json.get('username')
+    password = request.json.get('password')
+
+    if username is None or password is None:
+        raise DataValidationError('please enter a valid arguments')
+    if db.users.find_one({'username':username}) is not None:
+        raise DataValidationError('username already exists')
+    user = User(username,"")
+    user.hash_password(password)
+    user.add_user(db)
+    return jsonify({'username':username , 'message':'you have successfully created a new user'}) , 201
+
 
 @app.route('/shortlinks', methods=['GET','POST'])
+@auth.login_required
 def get_add_handler():
     if request.method == 'GET':
         
