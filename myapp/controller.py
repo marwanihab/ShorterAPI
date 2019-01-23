@@ -11,9 +11,10 @@ import schemas
 from jsonschema.exceptions import ValidationError 
 from models import User ,  DataValidationError
 from flask_httpauth import HTTPBasicAuth
+from myapp import app , db 
 
 
-app = Flask(__name__)
+
 def generate_random_slug():
        x = ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(16))
        return x
@@ -21,8 +22,6 @@ def generate_random_slug():
 
 auth = HTTPBasicAuth()
 
-client = MongoClient('mongodb://marwan:Mm1234567@ds163164.mlab.com:63164/mongotask')
-db = client.mongotask
 def get_shortlink(db,slug):
     return db.links.find_one({"slug":slug})
 
@@ -46,9 +45,12 @@ def verify_password(username_or_token, password):
      if user :
       user_object = User(user['username'],user['password'])
       #print(user['username'],user['password'])
-      if not user_object.verify_password(password):   
+      if not user_object.verify_password(password): 
+       abort(401)     
        return False 
-     else: return False  
+     else: 
+         abort(401)     
+         return False  
     
     g.user = user_object
     return True
@@ -77,6 +79,15 @@ def not_found(e):
                         }
     schemas.validate_client_error_schema(response)                    
     return make_response(jsonify(response), status.HTTP_404_NOT_FOUND)
+
+@app.errorhandler(401)
+def auth_failed(e):
+    response = {
+                         "status": "failed",
+                         "message": "auth failed, failed to login user"
+                        }
+    schemas.validate_client_error_schema(response)                    
+    return make_response(jsonify(response), status.HTTP_401_NOT_FOUND)
 
 @app.errorhandler(400)
 def bad_request(e):
