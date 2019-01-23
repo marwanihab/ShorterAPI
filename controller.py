@@ -6,14 +6,16 @@ from datetime import datetime
 from pymongo import MongoClient
 from flask import make_response
 import random, string
-from flask_api import status 
+from flask_api import status # HTTP status code
 import schemas
 from jsonschema.exceptions import ValidationError 
 from models import User ,  DataValidationError
 from flask_httpauth import HTTPBasicAuth
-from myapp import app , db 
+from __init__ import  db 
 
-
+app = Flask(__name__)
+client = MongoClient('mongodb://marwan:Mm1234567@ds163164.mlab.com:63164/mongotask')
+db = client.mongotask
 
 def generate_random_slug():
        x = ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(16))
@@ -83,11 +85,12 @@ def not_found(e):
 @app.errorhandler(401)
 def auth_failed(e):
     response = {
-                         "status": "failed",
-                         "message": "auth failed, failed to login user"
-                        }
+                "status": "failed",
+                "message": 
+                "authentication failed, please make sure you have an account and you are provinding a valid username and password, If you do not have a user account please go to http://localhost:5000/users"
+                }
     schemas.validate_client_error_schema(response)                    
-    return make_response(jsonify(response), status.HTTP_401_NOT_FOUND)
+    return make_response(jsonify(response) , 401)
 
 @app.errorhandler(400)
 def bad_request(e):
