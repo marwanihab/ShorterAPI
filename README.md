@@ -23,7 +23,7 @@ pip3 install nose2
 
 ```bash
 python controller.py #to run the application
-nose2 #cd to the directory of the files and then type  to test 
+nose2 #cd to the directory of the files and run nose2 to test 
 
 ```
 
