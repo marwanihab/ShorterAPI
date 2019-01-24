@@ -11,7 +11,7 @@ import schemas
 from jsonschema.exceptions import ValidationError 
 from models import User ,  DataValidationError
 from flask_httpauth import HTTPBasicAuth
-from __init__ import  db 
+
 
 app = Flask(__name__)
 client = MongoClient('mongodb://marwan:Mm1234567@ds163164.mlab.com:63164/mongotask')
@@ -46,7 +46,7 @@ def verify_password(username_or_token, password):
      user = db.users.find_one({'username':username_or_token}) #username case sensitive
      if user :
       user_object = User(user['username'],user['password'])
-      #print(user['username'],user['password'])
+      
       if not user_object.verify_password(password): 
        abort(401)     
        return False 
@@ -87,7 +87,7 @@ def auth_failed(e):
     response = {
                 "status": "failed",
                 "message": 
-                "authentication failed, please make sure you have an account and you are provinding a valid username and password, If you do not have a user account please go to http://localhost:5000/users"
+                "authentication failed, please make sure you have an account and you are provinding a valid username and password, If you do not have a user account please go  to http://localhost:5000/users and POST with a body of json object specifying username and password"
                 }
     schemas.validate_client_error_schema(response)                    
     return make_response(jsonify(response) , 401)
@@ -200,6 +200,8 @@ def update_handler(slug):
     schemas.validate_put_schema(request.get_json())
 
     data = request.get_json()
+    if 'slug' in data : raise ValidationError('Slug is a read only property once created it can not be updated')
+
     response={'slug':slug}
     if 'ios' in data: 
         ios = {} 
