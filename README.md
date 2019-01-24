@@ -1,23 +1,36 @@
-## ShorterAPI
-A simple API used to get or add shortlinks into a database.
+# ShorterAPI
 
-## Features 
-1)Using a cutomized errors with custimized message in the response.
-2)Using pymongo not Fask-pymong,most projects out there are using Flask-pymongo which is good no wrong about that but it would be useful to find project using a non familiar way.
+ShorterAPI is an API to deal with "url shortlinks" in a MongoDB database (create, read, update). 
 
 ## Installation
-1]Install Python Version 3.5.0 using pyenv or Homebrew (for macOS) or usinf the official website.  
-2]Install all the external packages i.e. Flask,Pymong,Jsonschema etc..
-3]you can install packages using pip or easy_install.
-4]MongoDB should be available :
-    One Way of doing this is by:
-    1)Either install mongoDB.
-    2)Use Docker pull mongo. 
-    3)mlab online database. 
-5]Run the api.py using Python command. 
+You will need to have a python 3.5.0 version installed on your computer.
+
+Use the package manager [pip](https://pip.pypa.io/en/stable/) to install external packages required.
+
+```bash
+pip3 install pymongo
+pip3 install flask
+pip3 install lazy
+pip3 install itsdangerous
+pip3 install flask_httpauth
+pip3 install passlib
+pip3 install jsonschema
+pip3 install flask_api
+pip3 install nose2
+```
+
+## How to run
+
+```bash
+python controller.py #to run the application
+nose2 #cd to the directory of the files and then type  to test 
+
+```
 
 ## Technologies
-MongoDB, Flask , Python 3.5.0
+* Python 3.5.0
+* Flask
+* Pymong
 
     
 
